@@ -26,7 +26,11 @@
 	#define		MOD_Y_CAL			2
 	#define		MOD_T_CAL			3
 	#define		MOD_MT_CAL			4
-	#define		TEMP_S				1		//0 = 传感器温度 1 = MCU温度 
+	#define		TEMP_S				1		//0 = 传感器温度 1 = MCU温度
+	
+	#define     CUSTOMER_XBY        0
+	
+
 
 	/*-----结构体数据类型定义---------*/
 	/*-----常量（表格等）声明---------*/
@@ -47,8 +51,11 @@ MAIN_EXT	xdata	int16u	AlarmHighLow;//'H'高电平报警，'L'低电平报警
 MAIN_EXT	xdata int8u		CompCalTag;
 MAIN_EXT	xdata int16s	XMax,YMax,XMin,YMin;
 MAIN_EXT	xdata int16s	XAtYMin,XAtYMax;                
-MAIN_EXT	xdata int16u	CompVal;
+MAIN_EXT	xdata int16u	CompVal;				//罗盘读数
 MAIN_EXT	xdata int8u		TxBuf[5];
-MAIN_EXT	xdata int16u	CompOffset;
+MAIN_EXT	xdata int16u	CompOffset;				//偏移量
 MAIN_EXT	xdata int8u		SysPowOnTag;
+#if CUSTOMER_XBY
+MAIN_EXT xdata int16u	sensor_num;
+#endif 
 //***********************************************************************/

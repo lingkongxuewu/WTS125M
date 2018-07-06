@@ -28,6 +28,7 @@
 	/*-----º¯ÊıÉùÃ÷-------------------*/
 	
 	int16u ModbusCrcCnt (int8u *ptr, int8u len);
+	int8u XBY_ModbusCrcCnt(int8u *ptr, int8u len);
 	
 #endif
 

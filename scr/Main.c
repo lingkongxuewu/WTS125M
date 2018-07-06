@@ -47,7 +47,9 @@ void main (void)
         SnProc();                    //角度计算
         Timer2_TaskInMain();		 //主动发送模式
         Send_TimeProc();			 //COMM的处理函数
+#if CUSTOMER_XBY
 		if(SysPowOnTag==1)
+#endif
 		{
 			if(CompCalTag==0)	Comp_AngCntProc();
 			else				Comp_CalSampProc();

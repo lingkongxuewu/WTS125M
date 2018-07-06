@@ -1065,7 +1065,8 @@ int8u ModRtu_RdVal (int16u addr,int8u* buf,int8u* excode)
 
 //***********************************************************************/
 void ModRtu_RdReg (int8u* buf)
-{   int16u addr;
+{   
+	int16u addr;
     int16u i,j;
     int16u crc=0;
     int8u err_code = 0,excode;
@@ -1094,6 +1095,102 @@ void ModRtu_RdReg (int8u* buf)
     Comm_PutStr(buf,i+2);			//i+2 加2是指加CRC的结果
     Comm_SendSta();
 }
+
+#if CUSTOMER_XBY
+//***********************************************************************/
+// *功    能：写寄存器的值
+// *入    口：
+// *出    口：
+// *备    注：XBR customer
+// *函数性质：
+//***********************************************************************/
+void ModRtu_XBR_Proc (int8u* buf,int8u n)
+{
+	static xdata int8u tx_buf[COMM_TX_BUF_SIZE];
+	int8u xdata arr[1];
+	
+    if(buf[n-3]!=XBY_ModbusCrcCnt(buf,(n-3))) return;                   //计算校验结果
+
+	if(buf[2] == 0x30)
+	{
+		 if(XBY_u82u16(&buf[3])!=sensor_num)	return;
+
+		 tx_buf[0] = 0xAA;
+		 tx_buf[1] = 0x55;	   					//帧头
+		 tx_buf[2] = 0x30;						//命令字
+		 tx_buf[3] = buf[3];		    
+		 tx_buf[4] = buf[4];					//传感器编号
+		 tx_buf[5] = 0x00;						//供电电压，无法提供
+		 tx_buf[6] = XBY_Int32s2hex(Get_McuTempInCelsius());    //MCU温度整数位
+
+	 	 XBY_s32tohex(arr,GetXAng());
+		 tx_buf[7] = arr[0];
+		 tx_buf[8] = arr[1];
+		 tx_buf[9] = arr[2];					//X轴角度
+
+		XBY_s32tohex(arr,GetYAng());
+		 tx_buf[10] = arr[0];
+		 tx_buf[11] = arr[1];
+		 tx_buf[12] = arr[2];					//Y轴角度	    //
+
+		XBY_u16tohex(arr,CompVal);
+		 tx_buf[13] = arr[0];
+		 tx_buf[14] = arr[1];					//航向角
+
+		 tx_buf[15] = XBY_ModbusCrcCnt(tx_buf,15);	//CRC校验
+		 tx_buf[16] = 0xF1;
+		 tx_buf[17] = 0xEE;
+
+		 Comm_PutStr(tx_buf,18);
+    	 Comm_SendSta();
+
+	}
+	else if(buf[2] == 0x31)
+	{
+					
+		 tx_buf[0] = 0xAA;
+		 tx_buf[1] = 0x55;	   					//帧头
+		 tx_buf[2] = 0x31;						//命令字
+		 tx_buf[3] = MR_READ_REGH(sensor_num);		    
+		 tx_buf[4] = MR_READ_REGL(sensor_num);					//传感器编号		  //修改
+		 tx_buf[5] = 0x00;										//供电电压，无法提供
+		 tx_buf[6] = XBY_Int32s2hex(Get_McuTempInCelsius());    //MCU温度整数位
+
+		 XBY_s32tohex(arr,GetXAng());
+		 tx_buf[7] = arr[0];
+		 tx_buf[8] = arr[1];
+		 tx_buf[9] = arr[2];					//X轴角度
+
+		 XBY_s32tohex(arr,GetYAng());
+		 tx_buf[10] = arr[0];
+		 tx_buf[11] = arr[1];
+		 tx_buf[12] = arr[2];					//Y轴角度
+
+		 XBY_u16tohex(arr,CompVal);
+		 tx_buf[13] = arr[0];
+		 tx_buf[14] = arr[1];					//航向角
+		 
+		 tx_buf[15] = 0x57;
+		 tx_buf[16] = 0x47;
+		 tx_buf[17] = 0x4B;
+		 tx_buf[18] = 0x4A;						//沃感科技WGKJ
+		 
+		 tx_buf[19] = XBY_Int8tohex(fac_date[0]);
+		 tx_buf[20] = XBY_Int8tohex(fac_date[1]);
+		 tx_buf[21] = XBY_Int8tohex(fac_date[2]);				//出厂日期
+		 
+		 tx_buf[22] = XBY_ModbusCrcCnt(tx_buf,22);
+		 
+		 tx_buf[23] = 0xF1;
+		 tx_buf[24] = 0xEE;
+		 
+		 Comm_PutStr(tx_buf,25);
+    	 Comm_SendSta();  
+		 	
+	}
+}
+#endif
+
 //***********************************************************************/
 // *功    能：写寄存器的值
 // *入    口：
@@ -1102,7 +1199,8 @@ void ModRtu_RdReg (int8u* buf)
 // *函数性质：
 //***********************************************************************/
 void ModRtu_WrReg (int8u* buf,int8u n)
-{   int16u addr;
+{   
+	int16u addr,Add;
     int16u i,j;
     int16u crc;
     int8u err_code = 0,excode;
@@ -1110,6 +1208,7 @@ void ModRtu_WrReg (int8u* buf,int8u n)
     j = ModRtu_8to16(&buf[4]);
     if((n != (j*2+9))||(buf[6]!= (j*2)))    return;	//数据长度判断
     addr = ModRtu_8to16(&buf[2]);					//地址
+	Add = addr;
     for(i = 0; i < j; i++)
     {
         if(FALSE == ModRtu_WrVal(addr,&buf[7+i*2],&excode))
@@ -1120,6 +1219,15 @@ void ModRtu_WrReg (int8u* buf,int8u n)
         addr++;
     }
     if(buf[0] == 0) return;         //广播方式无返回
+#if CUSTOMER_XBY
+	if(Add == 0xA800)
+	{
+		Sub_Str2Int16u(&sensor_num,&SystemVer[11]);
+		fac_date[0] = Sub_Str2Int8u(&buf[10]);
+		fac_date[1] = Sub_Str2Int8u(&buf[12]);
+		fac_date[2] = Sub_Str2Int8u(&buf[14]);
+	}
+#endif
     if(err_code == 1)
     {
         ModRtu_RlyError(buf,excode);
@@ -1177,7 +1285,7 @@ void ModRtu_RxProc (int8u* buf, int8u n)
 
     switch(buf[1])
     {
-        case READ:          ModRtu_RdReg(buf);  				// 读取寄存器
+        case READ:			ModRtu_RdReg(buf);  				// 读取寄存器
                             break;
         case WRITE:         ModRtu_WrReg(buf,n);				// 写寄存器
                             break;
@@ -1208,6 +1316,7 @@ void Int32s2val (char* s,int32s val)
 	s[4] = val/10;
 	s[5] = val%10;
 }
+
 
 void CustomPro(int8u* buf, int8u n)
 {

@@ -74,9 +74,19 @@ void Send_TimeProc (void)
 			 CustomPro(rx_buf,i);
 		}
 		else
+		{	
 	        ModRtu_RxProc(rx_buf,i);
+		}
         return;
     }
+#if CUSTOMER_XBY
+
+	else if(rx_buf[0]==0xAA&&rx_buf[1]==0x55&&rx_buf[i-2]==0xF1&&rx_buf[i-1]==0xEE)
+	{
+		  ModRtu_XBR_Proc(rx_buf,i);
+		  return;
+	}
+#endif
 //#endif
     if((0x0D!=rx_buf[i-2])||(0x0A!=rx_buf[i-1]))	 //判断后两位数据是否是回车换行
     {   
@@ -515,7 +525,8 @@ static void Send_SDeal ( char* buf,int8u n)
 // *函数性质：
 //***********************************************************************/
 static void Send_WDeal ( char* buf,int8u n)
-{   int16s data_x,data_y;
+{   
+	int16s data_x,data_y;
     int16u data_t;
 
     if(0==strncmp(buf,"wr t,",5))//写温度补尝参数
@@ -536,6 +547,12 @@ static void Send_WDeal ( char* buf,int8u n)
             return;
         }
         strncpy(SystemVer,&buf[6],SystemVerNum);
+#if CUSTOMER_XBY
+		Sub_Str2Int16u(&sensor_num,&SystemVer[11]);			 //serial number
+		fac_date[0]=Sub_Str2Int8u(&SystemVer[3]);			 //Date
+		fac_date[1]=Sub_Str2Int8u(&SystemVer[5]);
+		fac_date[2]=Sub_Str2Int8u(&SystemVer[7]);
+#endif
         Comm_PutStr(buf,(SystemVerNum+6));
         Sub_SendOk();
     }

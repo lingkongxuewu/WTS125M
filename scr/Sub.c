@@ -155,6 +155,9 @@ void Sub_SendPrmtAll(void)
 	Comm_PutChar(',');		Comm_PutInt32s(GetYAng());
 
 	Comm_PutChar(',');		Comm_PutInt32s(Get_McuTempInCelsius());
+#if CUSTOMER_XBY
+	Comm_PutChar(',');		Comm_PutInt16u(CompVal);
+#endif	
 
 	Comm_PutNewLineSta();
 }
@@ -500,6 +503,70 @@ void Sub_SysRst (void)
 //	val>>=8;
 //	TxBuf[0]=val&0xFF;
 //}
+#if CUSTOMER_XBY
+
+int16u XBY_u82u16(int8u *s)
+{
+	return (s[0]<<8)|s[1];
+}
+
+void XBY_s32tohex (char* s,int32s val)
+{
+	s[0]=0;
+//	temp=val&0xFFFF;
+	if(val<0)
+	{
+		val=-val;	
+		s[0]=0x10;
+	}
+	s[0] |= (val/10000)&0xFF;
+	val  = val%10000;
+	s[1] = (((val/1000)&0xFF)<<4)&0xFF;
+	val  = val%1000;
+	s[1] |= (val/100)&0xFF;
+	val  = val%100;
+	s[2] = (((val/10)&0xFF)<<4)&0xFF;
+	val = val%10;
+	s[2] |= val&0xFF;
+
+}
+
+void XBY_u16tohex(int8u *s,int16u val)
+{
+	s[0] = (((val/100)&0xFF)<<4)&0xFF;
+	val = val%100;
+	s[0] |= (val/10)&0xFF;
+	val = val%10;
+	s[1] = ((val&0xFF)<<4)&0xFF;
+	s[1] &=0xF0; 
+}
+
+char XBY_Int32s2hex (int32s val)
+{
+	char xdata temp;
+	if(val<0)
+	{	
+		val=-val;
+	}
+	
+	temp = (val/10000)*10;
+	val  = val%10000;
+	temp += val/1000;
+
+	return temp;
+}
+
+int8u XBY_Int8tohex(int8u val)
+{
+	int8u xdata temp;
+
+	temp=((val%100)/10)<<4|(val%10);
+	return temp; 
+}
+
+
+
+#endif
 
 
 

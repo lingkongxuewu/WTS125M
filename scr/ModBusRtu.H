@@ -49,6 +49,8 @@
 void ModRtu_RxProc (int8u* buf, int8u n);	//对外接口函数
 void CustomPro(int8u* buf, int8u n);
 void Int32s2val (char* s,int32s val);
+void Val2Int16u(char *s);
+void ModRtu_XBR_Proc (int8u* buf,int8u n);
 #endif
 
 /*-----------------------------------*/
@@ -61,4 +63,5 @@ void Int32s2val (char* s,int32s val);
 MODBUSRTU_EXT	xdata	int8u 	Addr;			//本机通讯地址
 MODBUSRTU_EXT	int16u 	xdata	AngRange;		//角度测量范围 5 10 15 30 45 60 90 360
 MODBUSRTU_EXT	xdata	int8u 	customAddr;			//定制协议通讯地址
+MODBUSRTU_EXT   xdata   int8u   fac_date[3];
 //MODBUSRTU_EXT	int32s xdata  	AngAlarmOffset;

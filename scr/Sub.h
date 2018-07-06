@@ -66,7 +66,12 @@
 //	int8u Sub_StralarmCheck(int32s *val,int8u* str);
 	void Sub_SendMcuTempCal (int8u i);
 	void Sub_BufBubble16s(int16s* id,int16u* x,int8u n);
-	void Cmd_SprintWord (int16u val);		
+	void Cmd_SprintWord (int16u val);
+	int16u XBY_u82u16(int8u *s);
+	void XBY_s32tohex (int8u* s,int32s val);
+	void XBY_u16tohex(int8u *s,int16u val);
+	char XBY_Int32s2hex (int32s val);
+	int8u XBY_Int8tohex(int8u val);
 #endif
 /*-----------------------------------*/
 #ifdef   __SUB_C__
